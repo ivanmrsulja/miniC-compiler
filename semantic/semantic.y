@@ -11,16 +11,20 @@
 
   extern int yylineno;
   char char_buffer[CHAR_BUFFER_LENGTH];
+  int* parameter_map[128];
   int error_count = 0;
   int warning_count = 0;
   int var_num = 0;
   int fun_idx = -1;
   int fcall_idx = -1;
   int type_capture = 0;
+  int func_type_capture = 0;
+  int return_flag = 0;
   int in_select = 0;
   int row_counter = 0;
   int switch_exp_is_declared = 1;
   int switch_depth = 0;
+  int arg_counter = 0;
 %}
 
 %union {
@@ -80,12 +84,17 @@ function
   : _TYPE _ID
       {
         fun_idx = lookup_symbol($2, FUN);
-        if(fun_idx == NO_INDEX)
+        if(fun_idx == NO_INDEX){
+          int* param_types = (int*) malloc(sizeof(int)*128);
           fun_idx = insert_symbol($2, FUN, $1, NO_ATR, NO_ATR);
+          parameter_map[fun_idx] = param_types;
+        }
         else 
           err("redefinition of function '%s'", $2);
+        func_type_capture = $1;
+        return_flag = 0;
       }
-    _LPAREN parameter _RPAREN body
+    _LPAREN parameter_list _RPAREN body
       {
         int i = 0;
         for(i = 0; i <= get_last_element(); i+=1){
@@ -95,18 +104,34 @@ function
         }
         clear_symbols(fun_idx + 1);
         var_num = 0;
+        if(!return_flag && func_type_capture != VOID){
+          warning("Function should return a value;");
+        }
       }
   ;
 
-parameter
+parameter_list
   : /* empty */
-      { set_atr1(fun_idx, 0); }
+    { set_atr1(fun_idx, 0); }
+  | parameters
 
-  | _TYPE _ID
+parameters
+  : parameter
+  | parameters _COMMA parameter
+
+parameter
+  : _TYPE _ID
       {
+        if ( $1 == VOID){
+          err("Type of parameter cannot be void.");
+        }
         insert_symbol($2, PAR, $1, 1, NO_ATR);
-        set_atr1(fun_idx, 1);
-        set_atr2(fun_idx, $1);
+        int num_params = get_atr1(fun_idx);
+        int* param_types = parameter_map[fun_idx];
+        param_types[num_params] = $1;
+        num_params += 1;
+        set_atr1(fun_idx, num_params);
+        //set_atr2(fun_idx, $1);
       }
   ;
 
@@ -122,6 +147,9 @@ variable_list
 variable
   : _TYPE
     {
+      if ( $1 == VOID){
+        err("Type of variable cannot be void.");
+      }
       type_capture = $1;
     } 
     vars declaration _SEMICOLON{ row_counter = 0; }
@@ -350,27 +378,36 @@ function_call
         fcall_idx = lookup_symbol($1, FUN);
         if(fcall_idx == NO_INDEX)
           err("'%s' is not a function", $1);
+        
+        arg_counter = 0;
       }
-    _LPAREN argument _RPAREN
+    _LPAREN argument_list _RPAREN
       {
-        if(get_atr1(fcall_idx) != $4)
+        if(get_atr1(fcall_idx) != arg_counter)
           err("wrong number of args to function '%s'", 
               get_name(fcall_idx));
         set_type(FUN_REG, get_type(fcall_idx));
         $$ = FUN_REG;
+        arg_counter = 0;
       }
   ;
 
-argument
+argument_list
   : /* empty */
-    { $$ = 0; }
+  | arguments
 
-  | num_exp
+arguments
+  : argument
+  | arguments _COMMA argument
+
+argument
+  : num_exp
     { 
-      if(get_atr2(fcall_idx) != get_type($1))
+      if(parameter_map[fcall_idx][arg_counter] != get_type($1))
         err("incompatible type for argument in '%s'",
             get_name(fcall_idx));
-      $$ = 1;
+      //$$ = 1;
+      arg_counter += 1;
     }
   ;
 
@@ -387,17 +424,26 @@ rel_exp
   : num_exp _RELOP num_exp
       {
         if(get_type($1) != get_type($3))
-          err("invalid operands: relational operator");
+          err("invalid operands : relational operator");
       }
   ;
 
 return_statement
   : _RETURN num_exp _SEMICOLON
       {
-        if(get_type(fun_idx) != get_type($2))
+        return_flag = 1;
+        if(func_type_capture == VOID){
+          err("Void function should not return a value.");
+        }
+        else if(get_type(fun_idx) != get_type($2))
           err("incompatible types in return");
       }
-	
+	| _RETURN _SEMICOLON
+    {
+      if(func_type_capture == INT || func_type_capture == UINT){
+        warning("Function should return a value.");
+      }
+    }
   ;
 
 %%
