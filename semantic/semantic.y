@@ -24,7 +24,11 @@
   int row_counter = 0;
   int switch_exp_is_declared = 1;
   int switch_depth = 0;
+  int block_depth = 0;
+  int block_counter[128];
+  int variable_map[128];
   int arg_counter = 0;
+
 %}
 
 %union {
@@ -185,31 +189,54 @@ vars
   : _ID
     {
       row_counter += 1;
-      if(lookup_symbol($1, VAR|PAR) == NO_INDEX){
+      block_counter[block_depth] += 1;
+      int idx = lookup_symbol($1, VAR|PAR);
+      if(idx == NO_INDEX){
         if(!in_select){
           insert_symbol($1, VAR, type_capture, ++var_num, UNINITIALISED);
+          variable_map[get_last_element()] = block_depth;
+          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }else{
           err("'%s' not defined", $1);
         }
       }
       else{
-        if(!in_select)
-          err("redefinition of '%s'", $1);
+        if(variable_map[idx] == block_depth){
+          if(!in_select)
+            err("redefinition of '%s'", $1);
+        }else{
+          // printf("%d", idx);
+          insert_symbol($1, VAR, type_capture, ++var_num, UNINITIALISED);
+          variable_map[get_last_element()] = block_depth;
+          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
+        }
       }
+      // print_symtab();
     }
   | vars _COMMA _ID
     {
       row_counter += 1;
-      if(lookup_symbol($3, VAR|PAR) == NO_INDEX){
+      block_counter[block_depth] += 1;
+      int idx = lookup_symbol($3, VAR|PAR);
+      if(idx == NO_INDEX){
         if(!in_select){
           insert_symbol($3, VAR, type_capture, ++var_num, UNINITIALISED);
+          variable_map[get_last_element()] = block_depth;
+          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }else{
           err("'%s' not defined.", $3);
         }
       }
       else{
-        if(!in_select)
-          err("redefinition of '%s'", $3);
+        // printf("%d", idx);
+        if(variable_map[idx] == block_depth){
+          if(!in_select)
+            err("redefinition of '%s'", $3);
+        }else{
+          insert_symbol($3, VAR, type_capture, ++var_num, UNINITIALISED);
+          variable_map[get_last_element()] = block_depth;
+          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
+        }
       }
     }
   ;
@@ -314,7 +341,26 @@ select_statement
   ;
 
 compound_statement
-  : _LBRACKET statement_list _RBRACKET
+  : _LBRACKET { block_depth += 1; block_counter[block_depth] = 0;} variable_list  statement_list _RBRACKET{
+      if(block_counter[block_depth] > 0){
+        printf("Count : %d", block_counter[block_depth]);
+        int i;
+        for(i = 0; i <= get_last_element(); i+=1){
+          if(get_kind(i) == VAR && get_atr2(i) == UNINITIALISED && variable_map[i] == block_depth){
+            err("uninitialised variable %s", get_name(i));
+          }
+        }
+        int idx = get_last_element();
+        while(block_counter[block_depth] > 0){
+          if(get_kind(idx) == VAR){
+            block_counter[block_depth] -= 1;
+          }
+          idx -= 1;
+        }
+        clear_symbols(idx+1);
+      }
+      block_depth -= 1; 
+    }
   ;
 
 assignment_statement
@@ -406,7 +452,6 @@ argument
       if(parameter_map[fcall_idx][arg_counter] != get_type($1))
         err("incompatible type for argument in '%s'",
             get_name(fcall_idx));
-      //$$ = 1;
       arg_counter += 1;
     }
   ;

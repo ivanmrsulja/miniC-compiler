@@ -70,6 +70,17 @@ int lookup_symbol(char *name, unsigned kind) {
   return -1;
 }
 
+int lookup_last_symbol(char *name, unsigned kind) {
+  int i;
+  int idx = -1;
+  for(i = 0; i <= get_last_element(); i+=1) {
+    if(strcmp(symbol_table[i].name, name) == 0 
+       && symbol_table[i].kind & kind)
+      idx = i;
+  }
+  return idx;
+}
+
 void set_name(int index, char *name) {
   if(index > -1 && index < SYMBOL_TABLE_LENGTH)
     symbol_table[index].name = name;
