@@ -59,8 +59,10 @@ int main() {
         a = 2;
     a = f(42);
     bb = a;
-    if (a + (aa-c) - d < b + (bb-a))    //5
-        uu = w-u+uu;
+    if (a + (aa-c) - d < b + (bb-a)){    //5
+        uu = w-u;
+        uu = uu + 1u;
+    }
     else
         d = aa+bb-c;
 

@@ -1,8 +1,8 @@
 // PARA test
 int main(){
-    int zbir, razlika;
+    int zbir, razlika = 0;
     int i;
-    unsigned u, counter;
+    unsigned u, counter = 0u;
 
     para ( i = 3 en 13){
     zbir = zbir + i;

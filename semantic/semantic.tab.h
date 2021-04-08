@@ -76,7 +76,8 @@ extern int yydebug;
     _BREAK = 282,
     _OTHERWISE = 283,
     _COLON = 284,
-    ONLY_IF = 285
+    _WHILE = 285,
+    ONLY_IF = 286
   };
 #endif
 
@@ -84,12 +85,12 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 34 "semantic.y"
+#line 36 "semantic.y"
 
   int i;
   char *s;
 
-#line 93 "semantic.tab.h"
+#line 94 "semantic.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

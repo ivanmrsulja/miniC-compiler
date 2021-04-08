@@ -28,7 +28,9 @@
   int block_counter[128];
   int variable_map[128];
   int arg_counter = 0;
-
+  int id_index_capture = -1;
+  int init_valid = 1;
+  int in_assignment = 0;
 %}
 
 %union {
@@ -63,6 +65,7 @@
 %token _BREAK;
 %token _OTHERWISE;
 %token _COLON;
+%token _WHILE;
 
 %type <i> num_exp exp literal function_call argument rel_exp
 
@@ -135,7 +138,6 @@ parameter
         param_types[num_params] = $1;
         num_params += 1;
         set_atr1(fun_idx, num_params);
-        //set_atr2(fun_idx, $1);
       }
   ;
 
@@ -195,7 +197,6 @@ vars
         if(!in_select){
           insert_symbol($1, VAR, type_capture, ++var_num, UNINITIALISED);
           variable_map[get_last_element()] = block_depth;
-          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }else{
           err("'%s' not defined", $1);
         }
@@ -205,13 +206,10 @@ vars
           if(!in_select)
             err("redefinition of '%s'", $1);
         }else{
-          // printf("%d", idx);
           insert_symbol($1, VAR, type_capture, ++var_num, UNINITIALISED);
           variable_map[get_last_element()] = block_depth;
-          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }
       }
-      // print_symtab();
     }
   | vars _COMMA _ID
     {
@@ -222,20 +220,17 @@ vars
         if(!in_select){
           insert_symbol($3, VAR, type_capture, ++var_num, UNINITIALISED);
           variable_map[get_last_element()] = block_depth;
-          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }else{
           err("'%s' not defined.", $3);
         }
       }
       else{
-        // printf("%d", idx);
         if(variable_map[idx] == block_depth){
           if(!in_select)
             err("redefinition of '%s'", $3);
         }else{
           insert_symbol($3, VAR, type_capture, ++var_num, UNINITIALISED);
           variable_map[get_last_element()] = block_depth;
-          // printf("Dubina : %d = %d |", block_depth, variable_map[get_last_element()]);
         }
       }
     }
@@ -255,7 +250,11 @@ statement
   | select_statement
   | para_statement
   | switch_statement
+  | while_statement
   ;
+
+while_statement
+  : _WHILE _LPAREN rel_exp _RPAREN statement
 
 switch_statement
   : _SWITCH _LPAREN _ID
@@ -322,7 +321,6 @@ para_statement
         }
         set_atr2(index, INITIALISED);
       }
-      // printf("|%d < %d|", atoi(get_name($5)), atoi(get_name($7)));
       if (atoi(get_name($5)) >= atoi(get_name($7))){
         err("Lower iterator bound must be LOWER than the upper iterator bound.");
       }
@@ -364,15 +362,20 @@ compound_statement
   ;
 
 assignment_statement
-  : _ID _ASSIGN num_exp _SEMICOLON
+  : _ID { in_assignment = 1; } _ASSIGN num_exp _SEMICOLON
       {
         int idx = lookup_symbol($1, VAR|PAR);
+        id_index_capture = idx;
         if(idx == NO_INDEX)
           err("invalid lvalue '%s' in assignment", $1);
         else
-          if(get_type(idx) != get_type($3))
+          if(get_type(idx) != get_type($4))
             err("incompatible types in assignment");
+        if(init_valid == 1){
           set_atr2(idx, INITIALISED);
+        }
+        in_assignment = 0;
+        init_valid = 1;
       }
   ;
 
@@ -392,6 +395,11 @@ exp
         $$ = lookup_symbol($1, VAR|PAR);
         if($$ == NO_INDEX)
           err("'%s' undeclared", $1);
+        if(in_assignment){
+          if(get_kind($$) == VAR && get_atr2($$) == UNINITIALISED){
+            init_valid = 0;
+          }
+        }
       }
   | function_call
   | _LPAREN num_exp _RPAREN

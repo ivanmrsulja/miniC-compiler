@@ -26,6 +26,7 @@
 "case"               { return _CASE; }
 "otherwise"          { return _OTHERWISE; }
 "break"              { return _BREAK; }
+"while"              { return _WHILE; }
 
 "("                  { return _LPAREN; }
 ")"                  { return _RPAREN; }
