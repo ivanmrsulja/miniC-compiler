@@ -132,6 +132,9 @@ parameter
         if ( $1 == VOID){
           err("Type of parameter cannot be void.");
         }
+        if(lookup_symbol($2, PAR) != -1){
+          err("Redefinition of parameter %s ", $2);
+        }
         insert_symbol($2, PAR, $1, 1, NO_ATR);
         int num_params = get_atr1(fun_idx);
         int* param_types = parameter_map[fun_idx];

@@ -1,7 +1,7 @@
 // OPIS : void tip
-int fun(int a, int b){
+int fun(int a, int a){
     int c;
-    c = a + b;
+    c = a + a;
     return c;
 }
 
