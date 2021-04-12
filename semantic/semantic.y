@@ -315,7 +315,7 @@ para_statement
   : _PARA _LPAREN _ID _ASSIGN literal _EN literal _RPAREN statement
     {
       int index;
-      index = lookup_symbol($3, VAR);
+      index = lookup_symbol($3, VAR | PAR);
       if(index == NO_INDEX){ // da li moze biti parametar???
         err("'%s' not declared.", $3);
       }else{
