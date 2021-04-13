@@ -79,7 +79,7 @@ program
       {  
         if(lookup_symbol("main", FUN) == NO_INDEX)
           err("undefined reference to 'main'");
-       }
+      }
   ;
 
 function_list
@@ -358,7 +358,7 @@ compound_statement
           }
           idx -= 1;
         }
-        clear_symbols(idx+1);
+        clear_symbols(idx + 1);
       }
       block_depth -= 1; 
     }
