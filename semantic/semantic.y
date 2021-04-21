@@ -1,6 +1,7 @@
 %{
   #include <stdio.h>
   #include <stdlib.h>
+  #include <string.h>
   #include "defs.h"
   #include "symtab.h"
 
@@ -20,7 +21,11 @@
   int type_capture = 0;
   int func_type_capture = 0;
   int return_flag = 0;
+
   int in_select = 0;
+  int select_counter = 0;
+  char* select_map[128];
+
   int row_counter = 0;
   int switch_exp_is_declared = 1;
   int switch_depth = 0;
@@ -67,7 +72,7 @@
 %token _COLON;
 %token _WHILE;
 
-%type <i> num_exp exp literal function_call argument rel_exp
+%type <i> num_exp exp literal function_call argument rel_exp unaryop
 
 %nonassoc ONLY_IF
 %nonassoc _ELSE
@@ -193,6 +198,17 @@ declaration
 vars
   : _ID
     {
+      if(in_select){
+        int i;
+        for(i = 0; i < 128; i++){
+          if(select_map[i] != (char*) -1 && strcmp(select_map[i], $1) == 0){
+            err("'%s' used more than once in select statement.", $1);
+          }
+        }
+        select_map[select_counter] = $1;
+        select_counter += 1;
+      }
+
       row_counter += 1;
       block_counter[block_depth] += 1;
       int idx = lookup_symbol($1, VAR|PAR);
@@ -216,6 +232,17 @@ vars
     }
   | vars _COMMA _ID
     {
+      if(in_select){
+        int i;
+        for(i = 0; i < 128; i++){
+          if(select_map[i] != (char*) -1 && strcmp(select_map[i], $3) == 0){
+            err("'%s' used more than once in select statement.", $3);
+          }
+        }
+        select_map[select_counter] = $3;
+        select_counter += 1;
+      }
+
       row_counter += 1;
       block_counter[block_depth] += 1;
       int idx = lookup_symbol($3, VAR|PAR);
@@ -332,7 +359,15 @@ para_statement
   ;
 
 select_statement
-  : _SELECT{ in_select = 1; } vars _FROM _ID _WHERE _LPAREN rel_exp _RPAREN _SEMICOLON
+  : _SELECT{
+      in_select = 1; 
+      select_counter = 0; 
+      int i; 
+      for(i = 0; i < 128; i += 1) {
+          select_map[i] = (char*) -1;
+      } 
+    } 
+    vars _FROM _ID _WHERE _LPAREN rel_exp _RPAREN _SEMICOLON
     {
       in_select = 0;
       if(lookup_symbol($5, VAR|PAR) == NO_INDEX){
@@ -407,6 +442,7 @@ exp
   | function_call
   | _LPAREN num_exp _RPAREN
       { $$ = $2; }
+  | unaryop
   ;
 
 unaryop
@@ -415,8 +451,9 @@ unaryop
       if(lookup_symbol($1, FUN) != NO_INDEX){
           err("Postincrement may be only used on variables, not functions.");
       }
-      if(lookup_symbol($1, VAR|PAR) == NO_INDEX){
-          err("%s not declared", $1);
+      $$ = lookup_symbol($1, VAR|PAR);
+      if($$ == NO_INDEX){
+          err("%s is not declared previously as a variable", $1);
       }
     }
   ;
