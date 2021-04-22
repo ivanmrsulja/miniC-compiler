@@ -8,8 +8,15 @@ int func1(int p) {
     return x;
 }
 
+void foo(){
+    return;
+}
+
 int main(){
 	int b;
 	b = func1(4);
+	func1(b);
+	func1(5);
+	foo();
 	return b;
 }

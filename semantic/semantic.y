@@ -281,6 +281,7 @@ statement
   | para_statement
   | switch_statement
   | while_statement
+  | function_call _SEMICOLON
   ;
 
 while_statement
