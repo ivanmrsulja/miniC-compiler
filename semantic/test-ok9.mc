@@ -1,3 +1,4 @@
+// OPIS: ugnjezdeno lokalne unutar bloka
 int main(){
     int x;
     int y;

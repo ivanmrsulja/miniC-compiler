@@ -5,7 +5,7 @@ int main() {
     int c,d,e,f;
     unsigned g;
 	k = 1; 
-  b = 2; 
+  	b = 2; 
 	d = 0;
 	e = 3; 
 	f = 1; 

@@ -1,4 +1,4 @@
-// OPIS: ok switch i ugnjezdeno
+// OPIS: pristupanje van bloka i promenljiva kojoj nije dodeljivana vrednost
 int main(){
     int x;
     x = 2;

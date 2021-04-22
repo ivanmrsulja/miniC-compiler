@@ -1,4 +1,4 @@
-// OPIS : void tip
+// OPIS : zarez na pocetku
 int fun(,int a, int b){
     int c;
     c = a + b;

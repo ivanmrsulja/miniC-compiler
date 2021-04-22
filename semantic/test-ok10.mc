@@ -1,3 +1,4 @@
+// OPIS: while ugnjezdeno
 int main(){
     int a = 9;
     while(a < 100){

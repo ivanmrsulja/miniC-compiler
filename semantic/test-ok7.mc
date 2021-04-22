@@ -1,4 +1,4 @@
-// OPIS: ok switch i ugnjezdeno
+// OPIS: ok switch i lokalne unutar bloka ugnjezdeno
 int main(){
     int a = 6;
     unsigned b = 6u;

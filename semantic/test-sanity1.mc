@@ -15,7 +15,7 @@ unsigned ff(unsigned x) {
     return x + f2() - y;
 }
 
-int main() {
+int main() { /* viselinijski komentar */
     int a;
     int b;
     int aa;
