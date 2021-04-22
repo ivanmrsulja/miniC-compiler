@@ -30,8 +30,24 @@ int main(){
                     hg = 2u;
                     break;
             }
+            switch(b){ // identican switch na istoj dubini
+                case 1u:
+                    hg = 1u;
+                    break;
+                case 5u:
+                    hg = 2u;
+                    break;
+            }
+            switch(a){ // iste konstante kao i u roditeljskom switch-u
+                case 1:
+                    hg = 1u;
+                    break;
+                case 5:
+                    hg = 2u;
+                    break;
+            }
         }
-        break; /* pitaj za ovo */
+        break;
     }
 
     {
