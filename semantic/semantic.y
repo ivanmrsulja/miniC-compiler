@@ -26,6 +26,9 @@
   int select_counter = 0;
   char* select_map[128];
 
+  int in_para = 0;
+  int para_iterator_map[128];
+
   int row_counter = 0;
   int switch_exp_is_declared = 1;
   int switch_depth = 0;
@@ -209,6 +212,16 @@ vars
         select_counter += 1;
       }
 
+      if (in_para > 0){
+        int idx = lookup_symbol($1, VAR|PAR);
+        int i;
+        for (i = 1; i <= in_para; i+=1){
+          if (idx == para_iterator_map[i]){
+            err("'%s' cannot have the same name as the iterator variable in PARA statement.", $1);
+          }
+        }
+      }
+
       row_counter += 1;
       block_counter[block_depth] += 1;
       int idx = lookup_symbol($1, VAR|PAR);
@@ -221,7 +234,7 @@ vars
         }
       }
       else{
-        if(variable_map[idx] == block_depth){
+        if(variable_map[idx] == block_depth || lookup_symbol($1, PAR) != -1){
           if(!in_select)
             err("redefinition of '%s'", $1);
         }else{
@@ -243,6 +256,16 @@ vars
         select_counter += 1;
       }
 
+      if (in_para > 0){
+        int idx = lookup_symbol($3, VAR|PAR);
+        int i;
+        for (i = 1; i <= in_para; i+=1){
+          if (idx == para_iterator_map[i]){
+            err("'%s' cannot have the same name as the iterator variable in PARA statement.", $3);
+          }
+        }
+      }
+
       row_counter += 1;
       block_counter[block_depth] += 1;
       int idx = lookup_symbol($3, VAR|PAR);
@@ -255,7 +278,7 @@ vars
         }
       }
       else{
-        if(variable_map[idx] == block_depth){
+        if(variable_map[idx] == block_depth || lookup_symbol($3, PAR) != -1){
           if(!in_select)
             err("redefinition of '%s'", $3);
         }else{
@@ -340,9 +363,10 @@ otherwise
   ;
 
 para_statement
-  : _PARA _LPAREN _ID _ASSIGN literal _EN literal _RPAREN statement
+  : _PARA _LPAREN _ID _ASSIGN literal _EN literal _RPAREN
     {
       int index;
+      in_para += 1;
       index = lookup_symbol($3, VAR | PAR);
       if(index == NO_INDEX){ // da li moze biti parametar???
         err("'%s' not declared.", $3);
@@ -355,7 +379,11 @@ para_statement
       if (atoi(get_name($5)) >= atoi(get_name($7))){
         err("Lower iterator bound must be LOWER than the upper iterator bound.");
       }
-
+      para_iterator_map[in_para] = index;
+    }
+    statement
+    {
+      in_para -= 1;
     }
   ;
 

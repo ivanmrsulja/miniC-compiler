@@ -5,7 +5,6 @@
 unsigned f(int k, unsigned p, unsigned o){
 	int g;
 	g = k + 1 ;
-
 	return (p + o);
 } 
 
