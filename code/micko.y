@@ -56,6 +56,7 @@
   int block_depth = 0;
   int block_counter[128];
   int has_outer_vars = 0;
+  int did_declaration = 0;
 
   int variable_map[128];
   int arg_counter = 0;
@@ -219,7 +220,7 @@ parameter
 body
   : _LBRACKET variable_list
       {
-        if(var_num)
+        if(var_num && did_declaration == 0)
           code("\n\t\tSUBS\t%%15,$%d,%%15", 4*var_num);
           block_counter[0] = var_num;
           has_outer_vars = 1;
@@ -251,6 +252,10 @@ declaration
       if(type_capture != INT){
         err("'%s' is not of type INT", $2);
       }
+      
+      code("\n\t\tSUBS\t%%15,$%d,%%15", 4*row_counter);
+      did_declaration = 1;
+
       int i;
       for(i = get_last_element(); i > get_last_element()-row_counter; i -= 1){
         set_atr2(i, INITIALISED);
@@ -265,6 +270,10 @@ declaration
       if(type_capture != UINT){
         err("'%s' is not of type UINT", $2);
       }
+
+      code("\n\t\tSUBS\t%%15,$%d,%%15", 4*row_counter);
+      did_declaration = 1;
+
       int i;
       for(i = get_last_element(); i > get_last_element()-row_counter; i -= 1){
         set_atr2(i, INITIALISED);
@@ -578,15 +587,15 @@ compound_statement
       
       block_depth += 1; 
       block_counter[block_depth] = 0;
-      }
+      did_declaration = 0;
+    }
     variable_list 
     {
-      if(var_num)
-          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*var_num - 4*(block_counter[block_depth-1]));
+      if(var_num && did_declaration == 0)
+          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(block_counter[block_depth]));
     }
     statement_list _RBRACKET{
       if(block_counter[block_depth] > 0){
-        printf("Count : %d", block_counter[block_depth]);
         int i;
         for(i = 0; i <= get_last_element(); i+=1){
           if(get_kind(i) == VAR && get_atr2(i) == UNINITIALISED && variable_map[i] == block_depth){

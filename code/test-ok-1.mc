@@ -1,5 +1,5 @@
 //OPIS: funkcija vise parametara
-//RETURN: 12
+//RETURN: 19
 
 int oduzmi(int e, int f){
 	{
@@ -11,13 +11,18 @@ int oduzmi(int e, int f){
 int saberi(int a, int b, int c){
 	int te = 9;
 	{
-		int d,k,l,j = 9;
+		int d,k,l,j;
+		d = 4;
+		k = 3;
+		l = 2;
+		j = 1;
 		{
-		int s, hh = 9;
-		a = oduzmi(te, 2);
+		int s, hh = 8;
+		c = oduzmi(te, l);
+		a = oduzmi(hh, j);
 		}
 	}
-	return a + b;
+	return a + b + c;
 }
 
 int main(){
