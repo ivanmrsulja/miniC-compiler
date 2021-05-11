@@ -106,7 +106,7 @@
 %token _WHILE;
 %token _QMARK
 
-%type <i> num_exp exp literal unaryop conditional
+%type <i> num_exp exp literal unaryop conditional half_exp full_exp
 %type <i> function_call argument rel_exp if_part
 
 %nonassoc ONLY_IF
@@ -683,7 +683,7 @@ num_exp
   ;
 
   conditional
-    : _LPAREN rel_exp _RPAREN _QMARK exp _COLON exp
+    : _LPAREN rel_exp _RPAREN _QMARK half_exp _COLON half_exp
       {
         if (get_type($5) != get_type($7)){
           err("Both alternatives must be of the same type as a target variable.");
@@ -708,8 +708,11 @@ num_exp
       }
 
 exp
-  : literal
+  : half_exp { $$ = $1; }
+  | full_exp { $$ = $1; }
 
+half_exp
+  : literal
   | _ID
       {
         $$ = lookup_symbol($1, VAR|PAR|GVAR);
@@ -722,7 +725,8 @@ exp
         }
       }
 
-  | function_call
+full_exp
+  : function_call
       {
         $$ = take_reg();
         gen_mov(FUN_REG, $$);
