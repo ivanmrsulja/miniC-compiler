@@ -16,7 +16,7 @@ int main(){
 	}
 	
 	para(j = 0 en 2){
-		b++;
+		b = b + j;
 	}
 	return b;
 }

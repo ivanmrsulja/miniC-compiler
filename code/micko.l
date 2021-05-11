@@ -35,7 +35,8 @@
 ";"                  { return _SEMICOLON; }
 "="                  { return _ASSIGN; }
 ","                  { return _COMMA; }
-":"                  { return _COLON;}
+":"                  { return _COLON; }
+"?"                  { return _QMARK; }
 
 "+"                  { yylval.i = ADD; return _AROP; }
 "-"                  { yylval.i = SUB; return _AROP; }

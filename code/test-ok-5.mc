@@ -1,21 +1,21 @@
 //OPIS: switch statement
 //RETURN: 1
 
-int main(){
-	int a = 0;
+unsigned main(){
+	unsigned a = 0u;
 	switch(a){
-		case 0:
-			a = 2;
+		case 0u:
+			a = 2u;
 	}
 	
 	switch(a){
-		case 1:
-			a = -2;
+		case 1u:
+			a = 2u;
 		otherwise:
 		{
 			switch(a){
-				case 2:
-					a = 1;
+				case 2u:
+					a = 1u;
 			}
 		}
 	}

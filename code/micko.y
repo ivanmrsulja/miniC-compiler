@@ -66,6 +66,8 @@
 
   int parameters_to_be_generated[128];
 
+  int conditional_operator_counter = 0;
+
   FILE *output;
 %}
 
@@ -102,8 +104,9 @@
 %token _OTHERWISE;
 %token _COLON;
 %token _WHILE;
+%token _QMARK
 
-%type <i> num_exp exp literal unaryop
+%type <i> num_exp exp literal unaryop conditional
 %type <i> function_call argument rel_exp if_part
 
 %nonassoc ONLY_IF
@@ -633,7 +636,7 @@ assignment_statement
           err("invalid lvalue '%s' in assignment", $1);
         else
           if(get_type(idx) != get_type($4))
-            err("incompatible types in assignment");
+            err("incompatible types in assignment.");
         if(init_valid == 1){
           set_atr2(idx, INITIALISED);
         }
@@ -679,6 +682,31 @@ num_exp
       }
   ;
 
+  conditional
+    : _LPAREN rel_exp _RPAREN _QMARK exp _COLON exp
+      {
+        if (get_type($5) != get_type($7)){
+          err("Both alternatives must be of the same type as a target variable.");
+        }
+
+        conditional_operator_counter += 1;
+        
+        code("\n\t\t%s\tsecond_choice_%d", opp_jumps[$2], conditional_operator_counter);
+        $$ = take_reg();
+        code("\n\t\tMOV\t");
+        gen_sym_name($5);
+        code(", ");
+        gen_sym_name($$);
+        code("\n\t\tJMP\tcond_end_%d", conditional_operator_counter);
+        code("\nsecond_choice_%d:", conditional_operator_counter);
+        code("\n\t\tMOV\t");
+        gen_sym_name($7);
+        code(", ");
+        gen_sym_name($$);
+        code("\ncond_end_%d:", conditional_operator_counter);
+        set_type($$, get_type($7));
+      }
+
 exp
   : literal
 
@@ -703,6 +731,7 @@ exp
   | _LPAREN num_exp _RPAREN
       { $$ = $2; }
   | unaryop
+  | conditional
   ;
 
 unaryop
