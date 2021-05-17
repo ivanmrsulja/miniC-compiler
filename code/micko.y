@@ -68,6 +68,9 @@
 
   int conditional_operator_counter = 0;
 
+  int while_counter = 0;
+  int while_depth = 0;
+
   FILE *output;
 %}
 
@@ -398,7 +401,20 @@ statement
   ;
 
 while_statement
-  : _WHILE _LPAREN rel_exp _RPAREN statement
+  : _WHILE
+    {
+      $<i>$ = ++while_counter;
+      code("\nwhile_%d_depth_%d:", while_counter, ++while_depth);
+    } 
+    _LPAREN rel_exp _RPAREN 
+    {
+      code("\n\t\t%s\tend_while_%d_depth_%d", opp_jumps[$4], while_counter, while_depth);
+    }
+    statement
+    {
+      code("\n\t\tJMP\twhile_%d_depth_%d", $<i>2, while_depth);
+      code("\nend_while_%d_depth_%d:", $<i>2, while_depth--);
+    }
 
 switch_statement
   : _SWITCH _LPAREN _ID
