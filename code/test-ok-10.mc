@@ -1,10 +1,10 @@
 //OPIS: while statement
-//RETURN: 21
+//RETURN: 41
 
 unsigned j;
 
 int main(){
-    int i = 0;
+    int i, k = 0;
     j = 0u;
     while (i < 10){
         i = i + 1;
@@ -16,6 +16,11 @@ int main(){
         while (j < 10u){
             i = i + 1;
             j++;
+            while (k < 2){
+                i = i + 1;
+                k++;
+            }
+            k = 0;
         }
     }
     return i;

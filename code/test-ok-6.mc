@@ -5,7 +5,8 @@ int main(){
 	int a = 0;
 	switch(a){
 		case 0:
-			a++;
+			a = a + 2;
+			break;
 		case 1:
 			a++;
 	}

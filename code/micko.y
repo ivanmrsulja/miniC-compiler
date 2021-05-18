@@ -52,6 +52,7 @@
   int map_of_depth_updated_literals[CHAR_BUFFER_LENGTH][CHAR_BUFFER_LENGTH];  // inicijalizuj sve na 0
   int num_of_updated_literals = 0;
   int count_of_depth_updated_literals[CHAR_BUFFER_LENGTH];
+  int switch_label_map[CHAR_BUFFER_LENGTH][CHAR_BUFFER_LENGTH];
 
   int block_depth = 0;
   int block_counter[128];
@@ -420,6 +421,7 @@ switch_statement
   : _SWITCH _LPAREN _ID
     {
       switch_count += 1;
+      $<i>$ = switch_count;
       switch_exp_is_declared = 1;
       switch_depth += 1;
 
@@ -446,7 +448,7 @@ switch_statement
       index = lookup_symbol($3, VAR|PAR|GVAR);
 
       for(j = 0; j <= get_last_element(); j += 1){
-        if(get_kind(j) == LIT && get_atr1(j) == switch_depth && get_atr2(j) == IN_SWITCH){
+        if(get_kind(j) == LIT && get_atr1(j) == switch_depth && get_atr2(j) == IN_SWITCH && $<i>4 == switch_label_map[j][switch_depth]){
           gen_cmp(index, j);
           code("\n\t\tJEQ\tswitch_%d_depth_%d_case_%d", switch_depth_map[switch_depth], switch_depth, j);
         }
@@ -470,7 +472,7 @@ switch_statement
         }
         
         if(get_kind(i) == LIT && get_atr2(i) == IN_SWITCH && switch_depth == 0){
-          set_atr1(i, CHAR_BUFFER_LENGTH);
+          set_atr1(i, 0);
         }
       }
     }
@@ -487,16 +489,17 @@ case
       if(get_type($2) != type_capture && switch_exp_is_declared){
         err("switch constants must be of same type as the switch expression.");
       }
-      if (get_atr1($2) == switch_depth && get_atr2($2) == IN_SWITCH){
+      if (get_atr1($2) == switch_depth && get_atr2($2) == IN_SWITCH && switch_label_map[$2][switch_depth] == switch_depth_map[switch_depth]){
         err("case constants must be unique %s", get_name($2));
       }else{
         int depth_capture = get_atr1($2);
         set_atr1($2, switch_depth);
         set_atr2($2, IN_SWITCH);
         if (get_atr2($2) == IN_SWITCH){
-          map_of_depth_updated_literals[$2][count_of_depth_updated_literals[$2]] = switch_depth_map[switch_depth];
+          map_of_depth_updated_literals[$2][count_of_depth_updated_literals[$2]] = switch_depth;
           count_of_depth_updated_literals[$2] += 1;
         }
+        switch_label_map[$2][switch_depth] = switch_depth_map[switch_depth];
       }
 
       code("\n\nswitch_%d_depth_%d_case_%d:", switch_depth_map[switch_depth], switch_depth, $2);
@@ -684,17 +687,19 @@ num_exp
       {
         if(get_type($1) != get_type($3))
           err("invalid operands: arithmetic operation");
-        int t1 = get_type($1);    
-        code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
-        gen_sym_name($1);
-        code(",");
-        gen_sym_name($3);
-        code(",");
-        free_if_reg($3);
-        free_if_reg($1);
-        $$ = take_reg();
-        gen_sym_name($$);
-        set_type($$, t1);
+        else{
+          int t1 = get_type($1);    
+          code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
+          gen_sym_name($1);
+          code(",");
+          gen_sym_name($3);
+          code(",");
+          free_if_reg($3);
+          free_if_reg($1);
+          $$ = take_reg();
+          gen_sym_name($$);
+          set_type($$, t1);
+        }
       }
   ;
 
@@ -899,6 +904,7 @@ return_statement
       if(func_type_capture == INT || func_type_capture == UINT){
         warning("Function should return a value.");
       }
+      code("\n\t\tJMP \t@%s_exit", get_name(fun_idx));
     }
   ;
 

@@ -27,7 +27,6 @@ int main(){
 				otherwise:
 					a = 7;
 			}
-			
 		}	
 			break;
 		case 9:

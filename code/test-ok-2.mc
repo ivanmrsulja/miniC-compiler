@@ -4,7 +4,11 @@
 unsigned global;
 
 void foo(unsigned broj){
-	global = global + broj;
+	if (broj == 10u){
+		global = global + broj;
+		return;
+	}
+	global = global + broj + 1u;
 }
 
 unsigned main(){
