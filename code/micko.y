@@ -617,6 +617,7 @@ compound_statement
           code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(block_counter[block_depth]));
     }
     statement_list _RBRACKET{
+      code("\n\t\tADDS\t%%15,$%d,%%15", 4*(block_counter[block_depth]));
       if(block_counter[block_depth] > 0){
         int i;
         for(i = 0; i <= get_last_element(); i+=1){
@@ -662,9 +663,9 @@ assignment_statement
         in_assignment = 0;
         init_valid = 1;
 
-        int i;
+        int i, j;
         for(i = 0; i < 128; i+=1){
-          if(left_to_increment[i] > -1){
+          for(j = 0; j < left_to_increment[i] + 1; j+=1){
             if(get_type(i) == UINT){
               code("\n\t\tADDU\t");
             }else {
@@ -674,6 +675,7 @@ assignment_statement
             code(", $1, ");
             gen_sym_name(i);
           }
+          left_to_increment[i] = -1;
         }
         in_expression = 0;
 
@@ -770,7 +772,7 @@ unaryop
           err("%s is not declared previously as a variable", $1);
       }
       if(in_expression == 1){
-        left_to_increment[$$] = 1;
+        left_to_increment[$$] += 1;
       }else{
         if(get_type($$) == UINT){
               code("\n\t\tADDU\t");

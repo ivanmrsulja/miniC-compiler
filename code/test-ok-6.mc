@@ -14,6 +14,8 @@ int main(){
 	switch(a){
 		case 2:
 			a++;
+		case 0:
+			a = a + 0;
 		otherwise:
 			a = a + 9;
 	}

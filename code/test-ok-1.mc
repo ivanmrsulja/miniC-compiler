@@ -21,6 +21,7 @@ int saberi(int a, int b, int c){
 		c = oduzmi(te, l);
 		a = oduzmi(hh, j);
 		}
+		te = 0;
 	}
 	return a + b + c;
 }
