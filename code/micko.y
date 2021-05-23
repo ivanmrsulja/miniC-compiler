@@ -405,16 +405,16 @@ while_statement
   : _WHILE
     {
       $<i>$ = ++while_counter;
-      code("\nwhile_%d_depth_%d:", while_counter, ++while_depth);
+      code("\n@while_%d_depth_%d:", while_counter, ++while_depth);
     } 
     _LPAREN rel_exp _RPAREN 
     {
-      code("\n\t\t%s\tend_while_%d_depth_%d", opp_jumps[$4], while_counter, while_depth);
+      code("\n\t\t%s\t@end_while_%d_depth_%d", opp_jumps[$4], while_counter, while_depth);
     }
     statement
     {
-      code("\n\t\tJMP\twhile_%d_depth_%d", $<i>2, while_depth);
-      code("\nend_while_%d_depth_%d:", $<i>2, while_depth--);
+      code("\n\t\tJMP\t@while_%d_depth_%d", $<i>2, while_depth);
+      code("\n@end_while_%d_depth_%d:", $<i>2, while_depth--);
     }
 
 switch_statement
@@ -435,13 +435,13 @@ switch_statement
       }
       type_capture = get_type(index);
 
-      code("\n\t\tJMP\tswitch_%d_depth_%d_check", switch_depth_map[switch_depth], switch_depth);
+      code("\n\t\tJMP\t@switch_%d_depth_%d_check", switch_depth_map[switch_depth], switch_depth);
     } _RPAREN _LBRACKET cases otherwise _RBRACKET
     {
       
-      code("\n\nswitch_%d_depth_%d_skip_check:", switch_depth_map[switch_depth], switch_depth);
-      code("\n\t\tJMP\tswitch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
-      code("\n\nswitch_%d_depth_%d_check:", switch_depth_map[switch_depth], switch_depth);
+      code("\n\n@switch_%d_depth_%d_skip_check:", switch_depth_map[switch_depth], switch_depth);
+      code("\n\t\tJMP\t@switch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
+      code("\n\n@switch_%d_depth_%d_check:", switch_depth_map[switch_depth], switch_depth);
 
       int j;
       int index;
@@ -450,13 +450,13 @@ switch_statement
       for(j = 0; j <= get_last_element(); j += 1){
         if(get_kind(j) == LIT && get_atr1(j) == switch_depth && get_atr2(j) == IN_SWITCH && $<i>4 == switch_label_map[j][switch_depth]){
           gen_cmp(index, j);
-          code("\n\t\tJEQ\tswitch_%d_depth_%d_case_%d", switch_depth_map[switch_depth], switch_depth, j);
+          code("\n\t\tJEQ\t@switch_%d_depth_%d_case_%d", switch_depth_map[switch_depth], switch_depth, j);
         }
       }
       if(otherwise_exists[switch_depth]){
-        code("\n\t\tJMP\tswitch_%d_depth_%d_otherwise", switch_depth_map[switch_depth], switch_depth);
+        code("\n\t\tJMP\t@switch_%d_depth_%d_otherwise", switch_depth_map[switch_depth], switch_depth);
       }
-      code("\n\nswitch_%d_depth_%d_exit:", switch_depth_map[switch_depth], switch_depth);
+      code("\n\n@switch_%d_depth_%d_exit:", switch_depth_map[switch_depth], switch_depth);
       otherwise_exists[switch_depth] = 0;
       
       switch_depth -= 1;
@@ -502,7 +502,7 @@ case
         switch_label_map[$2][switch_depth] = switch_depth_map[switch_depth];
       }
 
-      code("\n\nswitch_%d_depth_%d_case_%d:", switch_depth_map[switch_depth], switch_depth, $2);
+      code("\n\n@switch_%d_depth_%d_case_%d:", switch_depth_map[switch_depth], switch_depth, $2);
     }
     _COLON statement break
   ;
@@ -511,7 +511,7 @@ break
   : /* empty */
   | _BREAK _SEMICOLON
     {
-      code("\n\t\tJMP\tswitch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
+      code("\n\t\tJMP\t@switch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
     }
   ;
 
@@ -520,11 +520,11 @@ otherwise
   | _OTHERWISE _COLON
   {
     otherwise_exists[switch_depth] = 1;
-    code("\n\nswitch_%d_depth_%d_otherwise:", switch_depth_map[switch_depth], switch_depth);
+    code("\n\n@switch_%d_depth_%d_otherwise:", switch_depth_map[switch_depth], switch_depth);
   }
   statement
   {
-    code("\n\t\tJMP\tswitch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
+    code("\n\t\tJMP\t@switch_%d_depth_%d_exit", switch_depth_map[switch_depth], switch_depth);
   }
   ;
 
@@ -550,18 +550,18 @@ para_statement
       para_count += 1;
       para_count_map[in_para] = para_count;
 
-      code("\npara_%d_%d_init:", para_count_map[in_para], in_para);
+      code("\n@para_%d_%d_init:", para_count_map[in_para], in_para);
       code("\n\t\tMOV\t");
       gen_sym_name($5);
       code(", ");
       gen_sym_name(index);
-      code("\npara_%d_%d_body:", para_count_map[in_para], in_para);
+      code("\n@para_%d_%d_body:", para_count_map[in_para], in_para);
       gen_cmp(index, $7);
 
       if (get_type(index) == INT){
-        code("\n\t\tJGTS\tpara_%d_%d_exit", para_count_map[in_para], in_para);
+        code("\n\t\tJGTS\t@para_%d_%d_exit", para_count_map[in_para], in_para);
       } else {
-        code("\n\t\tJGTU\tpara_%d_%d_exit", para_count_map[in_para], in_para);
+        code("\n\t\tJGTU\t@para_%d_%d_exit", para_count_map[in_para], in_para);
       }
     }
     statement
@@ -576,8 +576,8 @@ para_statement
       gen_sym_name(idx);
       code(", $1, ");
       gen_sym_name(idx);
-      code("\n\t\tJMP\tpara_%d_%d_body", para_count_map[in_para], in_para);
-      code("\npara_%d_%d_exit:", para_count_map[in_para], in_para);
+      code("\n\t\tJMP\t@para_%d_%d_body", para_count_map[in_para], in_para);
+      code("\n@para_%d_%d_exit:", para_count_map[in_para], in_para);
       in_para -= 1;
     }
   ;
@@ -714,19 +714,19 @@ num_exp
 
         conditional_operator_counter += 1;
         
-        code("\n\t\t%s\tsecond_choice_%d", opp_jumps[$2], conditional_operator_counter);
+        code("\n\t\t%s\t@second_choice_%d", opp_jumps[$2], conditional_operator_counter);
         $$ = take_reg();
         code("\n\t\tMOV\t");
         gen_sym_name($5);
         code(", ");
         gen_sym_name($$);
-        code("\n\t\tJMP\tcond_end_%d", conditional_operator_counter);
-        code("\nsecond_choice_%d:", conditional_operator_counter);
+        code("\n\t\tJMP\t@cond_end_%d", conditional_operator_counter);
+        code("\n@second_choice_%d:", conditional_operator_counter);
         code("\n\t\tMOV\t");
         gen_sym_name($7);
         code(", ");
         gen_sym_name($$);
-        code("\ncond_end_%d:", conditional_operator_counter);
+        code("\n@cond_end_%d:", conditional_operator_counter);
         set_type($$, get_type($7));
       }
 
