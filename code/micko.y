@@ -50,14 +50,12 @@
   int switch_depth_map[CHAR_BUFFER_LENGTH];
 
   int map_of_depth_updated_literals[CHAR_BUFFER_LENGTH][CHAR_BUFFER_LENGTH];  // inicijalizuj sve na 0
-  int num_of_updated_literals = 0;
   int count_of_depth_updated_literals[CHAR_BUFFER_LENGTH];
   int switch_label_map[CHAR_BUFFER_LENGTH][CHAR_BUFFER_LENGTH];
 
   int block_depth = 0;
   int block_counter[128];
   int has_outer_vars = 0;
-  int did_declaration = 0;
 
   int variable_map[128];
   int arg_counter = 0;
@@ -229,10 +227,11 @@ parameter
 body
   : _LBRACKET variable_list
       {
-        if(var_num - inline_declaration_counter > 0)
+        if(var_num - inline_declaration_counter > 0){
           code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(var_num - inline_declaration_counter));
           block_counter[0] = var_num;
           has_outer_vars = 1;
+        }
         code("\n@%s_body:", get_name(fun_idx));
         inline_declaration_counter = 0;
       }
