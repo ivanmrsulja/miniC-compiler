@@ -2,15 +2,21 @@
 //RETURN: 4
 int func1(int p) {
     int x, b;
-    int c;
+    int c = 2;
     x = p;
     b = 3;
-    c = b + 1;
     return x;
+}
+
+void foo(){
+    return;
 }
 
 int main(){
 	int b;
 	b = func1(4);
+	func1(b);
+	func1(5);
+	foo();
 	return b;
 }

@@ -27,7 +27,9 @@ int saberi(int a, int b, int c){
 }
 
 int main(){
-	int a, b = 5;
+	int a, b;
+	a = 5;
+	b = 5;
 	{
 		int c = 2;
 		a = a + c;

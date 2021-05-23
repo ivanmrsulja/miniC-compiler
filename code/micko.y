@@ -72,6 +72,8 @@
   int while_counter = 0;
   int while_depth = 0;
 
+  int inline_declaration_counter = 0;
+
   FILE *output;
 %}
 
@@ -227,11 +229,12 @@ parameter
 body
   : _LBRACKET variable_list
       {
-        if(var_num && did_declaration == 0)
-          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*var_num);
+        if(var_num - inline_declaration_counter > 0)
+          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(var_num - inline_declaration_counter));
           block_counter[0] = var_num;
           has_outer_vars = 1;
         code("\n@%s_body:", get_name(fun_idx));
+        inline_declaration_counter = 0;
       }
     statement_list _RBRACKET
   ;
@@ -261,7 +264,7 @@ declaration
       }
       
       code("\n\t\tSUBS\t%%15,$%d,%%15", 4*row_counter);
-      did_declaration = 1;
+      inline_declaration_counter += row_counter;
 
       int i;
       for(i = get_last_element(); i > get_last_element()-row_counter; i -= 1){
@@ -279,7 +282,7 @@ declaration
       }
 
       code("\n\t\tSUBS\t%%15,$%d,%%15", 4*row_counter);
-      did_declaration = 1;
+      inline_declaration_counter += row_counter;
 
       int i;
       for(i = get_last_element(); i > get_last_element()-row_counter; i -= 1){
@@ -609,12 +612,12 @@ compound_statement
       
       block_depth += 1; 
       block_counter[block_depth] = 0;
-      did_declaration = 0;
     }
     variable_list 
     {
-      if(var_num && did_declaration == 0)
-          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(block_counter[block_depth]));
+      if(block_counter[block_depth] - inline_declaration_counter != 0)
+          code("\n\t\tSUBS\t%%15,$%d,%%15", 4*(block_counter[block_depth] - inline_declaration_counter));
+      inline_declaration_counter = 0;
     }
     statement_list _RBRACKET{
       code("\n\t\tADDS\t%%15,$%d,%%15", 4*(block_counter[block_depth]));
