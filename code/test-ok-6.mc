@@ -17,7 +17,10 @@ int main(){
 		case 0:
 			a = a + 0;
 		otherwise:
-			a = a + 9;
+		{
+			int i = 9;
+			a = a + i;
+		}			
 	}
 	return a;
 }
