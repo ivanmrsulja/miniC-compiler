@@ -1,5 +1,5 @@
 //OPIS: poziv funkcije  sa razlicitim tipovima parametra
-//RETURN: 2
+//RETURN: 6
 unsigned f(int k, unsigned p, unsigned o){
 	int g;
 	
@@ -8,8 +8,8 @@ unsigned f(int k, unsigned p, unsigned o){
 	return (p + o);
 } 
 
-int main(){
+unsigned main(){
 	unsigned x;
 	x = f(3, 2u, 4u);
-	return 2;
+	return x;
 }

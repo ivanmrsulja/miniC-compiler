@@ -7,7 +7,7 @@ int main() {
   unsigned z;
 
   y = 15;
-  x = y - 2;
+  x = y++ - 2;
   z = 9u;
 
   return x;

@@ -1,4 +1,6 @@
 //OPIS: void vise funkcija
+//RETURN: 0
+
 void main() {
     int a,b,c;
 		a = 0; 

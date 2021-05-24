@@ -1,4 +1,5 @@
 //OPIS: vise funkcija - obe void
+//RETURN: 0
 void main(int k) {
     int h,b;
     int c,d,e,f;

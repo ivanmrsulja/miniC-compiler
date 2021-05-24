@@ -5,11 +5,11 @@ unsigned f(){
 	unsigned g;
 	k = 2u;
 	g = 3u;
-	return g - 1u;
+	return g - 3u;
 } 
 
-int main(){
-	return 0;
+unsigned main(){
+	return f();
 }
 
 
