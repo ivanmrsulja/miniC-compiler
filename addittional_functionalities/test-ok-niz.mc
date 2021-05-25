@@ -4,7 +4,7 @@
 int main(){
 	int a[2];
 	int b[2];
-	int retVal = 0;
+	int retVal = -1;
 	a[0] = 10;
 	{
 		b[1] = 9;

@@ -292,6 +292,11 @@ output
             add_operand(OP_INDEX,$3,$1);
             $$ = make_opstr("%ld(%%%ld)",$1,$3);
         }
+    |   _REGISTER _LPAREN _REGISTER _RPAREN
+        {
+            add_operand_two_registers(OP_INDIRECT_INDEX,$3,$1);
+            $$ = make_opstr("%%%ld(%%%ld)",$1,$3);
+        }
     |   _LPAREN _REGISTER _RPAREN
         {
             add_operand(OP_INDIRECT,$2,0);

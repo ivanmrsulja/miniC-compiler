@@ -249,6 +249,19 @@ void add_operand(uchar kind, uchar reg, int data) {
     }
 }
 
+void add_operand_two_registers(uchar kind, uchar reg, uchar data) {
+    if (operand_cnt >= 3) {
+        parsererror("\nadd_operand fatal error");
+    } else {
+        operand[operand_cnt].kind = kind;
+        operand[operand_cnt].reg = reg;
+        //operand[operand_cnt].data = *getmem(processor.reg[operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista]);
+        operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista = data;
+        // printf("AAA %uc\ns", operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista);
+        operand_cnt++;
+    }
+}
+
 //ubacuje naredbu u segment koda
 void insert_code(uchar inst, uchar type, int line) {
     int i;
@@ -261,6 +274,7 @@ void insert_code(uchar inst, uchar type, int line) {
         codemem[code_cnt].op[i].kind = operand[i].kind;
         codemem[code_cnt].op[i].reg = operand[i].reg;
         codemem[code_cnt].op[i].data = operand[i].data;
+        codemem[code_cnt].op[i].moj_dodatni_registar_koji_nece_pokvariti_nista = operand[i].moj_dodatni_registar_koji_nece_pokvariti_nista;
     }
     code_cnt++;
     source_cnt++;
@@ -338,6 +352,8 @@ word get_operand(Operand op) {
             return *getmem(processor.reg[op.reg]);
         case OP_INDEX:
             return *getmem(processor.reg[op.reg]+op.data);
+        case OP_INDIRECT_INDEX:
+            return *(getmem(processor.reg[op.reg] + processor.reg[op.moj_dodatni_registar_koji_nece_pokvariti_nista]));
         case OP_CONSTANT:
             return op.data;
         case OP_ADDRESS:
@@ -354,6 +370,7 @@ word get_operand(Operand op) {
 void set_operand(Operand op, word data) {
     switch (op.kind) {
         case OP_REGISTER:
+            // printf("REGISTER %uc %d\n", op.reg, data);
             processor.reg[op.reg] = data;
             break;
         case OP_INDIRECT:
@@ -361,6 +378,10 @@ void set_operand(Operand op, word data) {
             break;
         case OP_INDEX:
             *getmem(processor.reg[op.reg]+op.data) = data;
+            break;
+        case OP_INDIRECT_INDEX:
+            // printf("OP_INDIRECT_INDEX %uc %d\n", op.moj_dodatni_registar_koji_nece_pokvariti_nista, processor.reg[op.moj_dodatni_registar_koji_nece_pokvariti_nista]);
+            *(getmem(processor.reg[op.reg] + processor.reg[op.moj_dodatni_registar_koji_nece_pokvariti_nista])) = data;
             break;
         case OP_ADDRESS:    //možda ne treba...
             op.data = data;
@@ -545,6 +566,7 @@ void run_once() {
             processor.pc++;
             break;
         case INS_MOV:
+            // printf("INS_MOV %uc %uc\n", i->op[1].moj_dodatni_registar_koji_nece_pokvariti_nista, i->op[0].moj_dodatni_registar_koji_nece_pokvariti_nista);
             set_operand(i->op[1], get_operand(i->op[0]));
             processor.pc++;
             break;

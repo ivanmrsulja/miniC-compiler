@@ -1,6 +1,7 @@
 //OPIS: funkcija sa 1 i 0 parametara
 //RETURN: 4
 int func1(int p) {
+    int k, s = 10;
     int x, b;
     int c = 2;
     x = p;

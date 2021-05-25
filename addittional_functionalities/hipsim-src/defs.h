@@ -37,7 +37,7 @@ typedef uint64_t uquad;
 enum { NO_TYPE = 0, SIGNED_TYPE, UNSIGNED_TYPE };
 
 //vrste operanada
-enum { OP_REGISTER = 1, OP_INDIRECT, OP_INDEX, OP_CONSTANT, OP_ADDRESS, OP_DATA } OperandType;
+enum { OP_REGISTER = 1, OP_INDIRECT, OP_INDEX, OP_INDIRECT_INDEX, OP_CONSTANT, OP_ADDRESS, OP_DATA } OperandType;
 
 //instrukcije
 enum { INS_CALL = 1, INS_RET, INS_PUSH, INS_POP, INS_CMP, INS_JMP, INS_JEQ, INS_JNE,

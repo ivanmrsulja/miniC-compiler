@@ -48,6 +48,7 @@ typedef struct _Operand {
     uchar kind;     //vrtsa operanda
     uchar reg;      //(dodatni) registar za operand
     word data;      //sadržaj operanda
+    uchar moj_dodatni_registar_koji_nece_pokvariti_nista;
 } Operand;
 
 //naredba
@@ -110,6 +111,7 @@ void print_stack(int lines);
 void print_global();
 void print_source(int lines);
 int get_global(char *name);
+void add_operand_two_registers(uchar kind, uchar reg, uchar data);
 
 //pomoćni makroi za parser
 extern char source_buffer[];
