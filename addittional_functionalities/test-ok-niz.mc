@@ -1,17 +1,16 @@
 //OPIS: nizovi
-//RETURN: 12
+//RETURN: 15
 
 int main(){
-	int a[2];
-	int b[2];
-	int retVal = -1;
-	a[0] = 10;
-	{
-		b[1] = 9;
-		a[1] = 1;
-		a[0] = 1 + 1;
-	}
-	retVal = a[0]++ + 1;
-	retVal = a[0] + b[1];
-	return retVal;
+	int ret, i = 0;
+	int idx = 3;
+
+	int a[5];
+	
+	a[idx] = 13 + 1;
+	ret = a[1];
+	
+	a[idx]++;
+
+	return a[idx];
 }

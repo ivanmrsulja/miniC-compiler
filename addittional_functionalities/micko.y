@@ -73,6 +73,7 @@
   int while_depth = 0;
 
   int offset_capture = -1;
+  int indexed_var = -1;
 
   FILE *output;
 %}
@@ -106,12 +107,12 @@
 %token _WHERE
 %token _PARA
 %token _EN
-%token _SWITCH;
-%token _CASE;
-%token _BREAK;
-%token _OTHERWISE;
-%token _COLON;
-%token _WHILE;
+%token _SWITCH
+%token _CASE
+%token _BREAK
+%token _OTHERWISE
+%token _COLON
+%token _WHILE
 %token _QMARK
 
 %type <i> num_exp exp literal unaryop conditional half_exp full_exp
@@ -277,10 +278,10 @@ variable
         code("\n\t\tMOV \t$0, ");
         gen_arr_sym_name(get_last_element(), i);
       }
-      char* source = malloc(sizeof(char));
-      source[0] = '*';
       //strcpy(res, get_name(get_last_element()));
       for (i = 1; i < arr_size; i+=1){
+        char* source = malloc(sizeof(char));
+        source[0] = '*';
         block_counter[block_depth] += 1;
         insert_symbol(source, VAR, type_capture, ++var_num, INITIALISED);
       }
@@ -674,7 +675,7 @@ compound_statement
   ;
 
 assignment_statement
-  : _ID indexing
+  : _ID
       { 
         in_assignment = 1;
         in_expression = 1;
@@ -690,7 +691,69 @@ assignment_statement
         if(idx == NO_INDEX)
           err("invalid lvalue '%s' in assignment", $1);
         else
-          if(get_type(idx) != get_type($5))
+          if(get_type(idx) != get_type($4))
+            err("incompatible types in assignment.");
+        if(init_valid == 1){
+          set_atr2(idx, INITIALISED);
+        }
+        in_assignment = 0;
+        init_valid = 1;
+        
+        int tmp_reg = take_reg();
+        if(offset_capture > 0){
+            code("\n\t\tMULS\t");
+            gen_sym_name(offset_capture);
+            code(", $4, ");
+            gen_sym_name(tmp_reg);
+
+            code("\n\t\tSUBS\t$-%d, ", get_atr1($4) * 4);
+            gen_sym_name(tmp_reg);
+            code(", ");
+            gen_sym_name(tmp_reg);
+        }
+
+        int i, j;
+        for(i = 0; i < 128; i+=1){
+          for(j = 0; j < left_to_increment[i] + 1; j+=1){
+            if(get_type(i) == UINT){
+              code("\n\t\tADDU\t");
+            }else {
+              code("\n\t\tADDS\t");
+            }
+            gen_sym_name(i);
+            code(", $1, ");
+            gen_sym_name(i);
+          }
+          left_to_increment[i] = -1;
+        }
+        in_expression = 0;
+        
+        if(offset_capture < 0){
+            gen_mov($4, idx);
+          } else {
+            code("\n\t\tMOV \t%s(%%14), ", get_name(tmp_reg));
+            gen_sym_name(idx);
+            offset_capture = -1;
+          }
+        free_if_reg(tmp_reg);
+      }
+  | indexing
+      { 
+        in_assignment = 1;
+        in_expression = 1;
+        int j;
+        for(j = 0; j < 128; j+=1){
+          left_to_increment[j] = -1;
+        }
+      } 
+    _ASSIGN num_exp _SEMICOLON
+      {
+        int idx = indexed_var;
+        id_index_capture = idx;
+        if(idx == NO_INDEX)
+          err("invalid lvalue '%s' in assignment", get_name(indexed_var));
+        else
+          if(get_type(idx) != get_type($4))
             err("incompatible types in assignment.");
         if(init_valid == 1){
           set_atr2(idx, INITIALISED);
@@ -713,18 +776,17 @@ assignment_statement
           left_to_increment[i] = -1;
         }
         in_expression = 0;
-        if($2 == -1){
-          gen_mov($5, idx);
-        } else {
-          gen_arr_mov($5, idx, $2);
-        }
+        
+        int temp = take_reg();
+        gen_mov($1, temp);
+        gen_arr_mov($4, idx, temp);
+        
         
       }
   ;
 
 indexing
-  : /* empty */ { $$ = -1; }
-  | _LSQBRACKET _INT_NUMBER _RSQBRACKET { $$ = atoi($2); }
+  : _ID _LSQBRACKET exp _RSQBRACKET { $$ = $3; indexed_var = lookup_symbol($1, VAR); }
   ;
 
 num_exp
@@ -734,15 +796,44 @@ num_exp
         if(get_type($1) != get_type($3))
           err("invalid operands: arithmetic operation");
         else{
-          int t1 = get_type($1);    
-          code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
-          gen_sym_name($1);
-          code(",");
+          int t1 = get_type($1);   
+
+          if(offset_capture >= 0){
+            code("\n\t\tMULS\t");
+            gen_sym_name(offset_capture);
+            code(", $4, ");
+            gen_sym_name(offset_capture);
+
+            code("\n\t\tSUBS\t$-%d, ", get_atr1($3) * 4);
+            gen_sym_name(offset_capture);
+            code(", ");
+            gen_sym_name(offset_capture);
+          }
+
           if(offset_capture < 0){
+            code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
+            gen_sym_name($1);
+            code(",");
             gen_sym_name($3);
           } else {
-            gen_arr_sym_name($3, offset_capture);
+            int temp = take_reg();
+
+            code("\n\t\tMULS\t");
+            gen_sym_name(offset_capture);
+            code(", $4, ");
+            gen_sym_name(temp);
+
+            code("\n\t\tSUBS\t$-%d, ", get_atr1($3) * 4);
+            gen_sym_name(temp);
+            code(", ");
+            gen_sym_name(temp);
+
+            code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
+            gen_sym_name($1);
+            code(",");
+            code(" %s(%%14)", get_name(temp));
             offset_capture = -1;
+            free_if_reg(temp);
           }
           code(",");
           free_if_reg($3);
@@ -809,22 +900,22 @@ full_exp
       { $$ = $2; }
   | unaryop
   | conditional
-  | _ID _LSQBRACKET _INT_NUMBER _RSQBRACKET
+  | indexing
     {
-      $$ = lookup_symbol($1, VAR);
+      $$ = indexed_var;
       if($$ == NO_INDEX)
-        err("'%s' undeclared", $1);
+        err("'%s' undeclared", get_name(indexed_var));
       if(in_assignment){
         if(get_kind($$) == VAR && get_atr2($$) == UNINITIALISED){
           init_valid = 0;
         }
       }
-      offset_capture = atoi($3);
+      offset_capture = $1;
     }
   ;
 
 unaryop
-  : _ID indexing _UNOP
+  : _ID _UNOP
     {
       if(lookup_symbol($1, FUN) != NO_INDEX){
           err("Postincrement may be only used on variables, not functions.");
@@ -853,8 +944,34 @@ unaryop
               offset_capture = -1;
             }
       }
-      
-      
+    }
+  | indexing _UNOP
+    {
+      $$ = indexed_var;
+      if($$ == NO_INDEX){
+          err("%s is not declared previously as a variable", get_name(indexed_var));
+      }
+
+      int tmp_reg = take_reg();
+      if(indexed_var > 0){
+        code("\n\t\tMULS\t");
+        gen_sym_name($1);
+        code(", $4, ");
+        gen_sym_name(tmp_reg);
+
+        code("\n\t\tSUBS\t$-%d, ", get_atr1(indexed_var) * 4);
+        gen_sym_name(tmp_reg);
+        code(", ");
+        gen_sym_name(tmp_reg);
+
+        if(get_type($$) == UINT){
+          code("\n\t\tADDU\t");
+        }else {
+          code("\n\t\tADDS\t");
+        }
+        code("%s(%%14), $1, %s(%%14)", get_name(tmp_reg), get_name(tmp_reg));
+      }
+      free_if_reg(tmp_reg);
     }
   ;
 
@@ -968,7 +1085,28 @@ return_statement
         else if(get_type(fun_idx) != get_type($2))
           err("incompatible types in return");
 
-        gen_mov($2, FUN_REG);
+        int tmp_reg = take_reg();
+        if(offset_capture > 0){
+            code("\n\t\tMULS\t");
+            gen_sym_name(offset_capture);
+            code(", $4, ");
+            gen_sym_name(tmp_reg);
+
+            code("\n\t\tSUBS\t$-%d, ", get_atr1($2) * 4);
+            gen_sym_name(tmp_reg);
+            code(", ");
+            gen_sym_name(tmp_reg);
+        }
+        if(offset_capture < 0){
+            gen_mov($2, FUN_REG);
+          } else {
+            code("\n\t\tMOV \t%s(%%14), ", get_name(tmp_reg));
+            gen_sym_name(FUN_REG);
+            offset_capture = -1;
+          }
+        free_if_reg(tmp_reg);
+        //gen_mov($2, FUN_REG);
+        
         code("\n\t\tJMP \t@%s_exit", get_name(fun_idx));        
       }
   | _RETURN _SEMICOLON
@@ -1020,4 +1158,3 @@ int main() {
   else
     return 0; //OK
 }
-

@@ -92,13 +92,24 @@ void gen_mov(int input_index, int output_index) {
 }
 
 void gen_arr_mov(int input_index, int output_index, int offset) {
+  code("\n\t\tMULS\t");
+  gen_sym_name(offset);
+  code(", $4, ");
+  gen_sym_name(offset);
+
+  code("\n\t\tSUBS\t$-%d, ", (get_atr1(output_index)) * 4);
+  gen_sym_name(offset);
+  code(", ");
+  gen_sym_name(offset);
+
   code("\n\t\tMOV \t");
   gen_sym_name(input_index);
   code(",");
-  gen_arr_sym_name(output_index, offset);
+  code(" %s(%%14)", get_name(offset));
 
   //ako se smešta u registar, treba preneti tip 
   if(output_index >= 0 && output_index <= LAST_WORKING_REG)
     set_type(output_index, get_type(input_index));
   free_if_reg(input_index);
+  free_if_reg(offset);
 }
