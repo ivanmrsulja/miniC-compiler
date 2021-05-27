@@ -2,15 +2,16 @@
 //RETURN: 15
 
 int main(){
-	int ret, i = 0;
-	int idx = 3;
+	int ind, i = 0;
+	int broj = 1;
 
 	int a[5];
 	
-	a[idx] = 13 + 1;
-	ret = a[1];
+	a[ind] = 13 + a[3];
+	a[ind]++;
 	
-	a[idx]++;
-
-	return a[idx];
+	a[1] = broj + a[0];
+	
+	
+	return a[1];
 }

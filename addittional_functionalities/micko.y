@@ -796,20 +796,8 @@ num_exp
         if(get_type($1) != get_type($3))
           err("invalid operands: arithmetic operation");
         else{
-          int t1 = get_type($1);   
-
-          if(offset_capture >= 0){
-            code("\n\t\tMULS\t");
-            gen_sym_name(offset_capture);
-            code(", $4, ");
-            gen_sym_name(offset_capture);
-
-            code("\n\t\tSUBS\t$-%d, ", get_atr1($3) * 4);
-            gen_sym_name(offset_capture);
-            code(", ");
-            gen_sym_name(offset_capture);
-          }
-
+          int t1 = get_type($1);             
+          
           if(offset_capture < 0){
             code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
             gen_sym_name($1);
@@ -831,7 +819,9 @@ num_exp
             code("\n\t\t%s\t", ar_instructions[$2 + (t1 - 1) * AROP_NUMBER]);
             gen_sym_name($1);
             code(",");
-            code(" %s(%%14)", get_name(temp));
+
+            code(" %s(%%14)", get_name(temp));           
+
             offset_capture = -1;
             free_if_reg(temp);
           }
