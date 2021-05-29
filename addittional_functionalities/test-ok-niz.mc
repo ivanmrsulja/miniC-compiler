@@ -10,7 +10,7 @@ int main(){
 	a[ind] = a[3] + 13;
 	a[ind]++;
 	
-	a[1] = a[0] + broj + 1 + a[0];
+	a[2 - 1] = a[0] + broj + 1 + a[0];
 	
 	while (i < 10) {
 		a[i] = a[i] + i;

@@ -786,7 +786,7 @@ assignment_statement
   ;
 
 indexing
-  : _ID _LSQBRACKET exp _RSQBRACKET { $$ = $3; indexed_var = lookup_symbol($1, VAR); }
+  : _ID _LSQBRACKET num_exp _RSQBRACKET { $$ = $3; indexed_var = lookup_symbol($1, VAR | PAR | GVAR | LIT | REG); }
   ;
 
 num_exp
