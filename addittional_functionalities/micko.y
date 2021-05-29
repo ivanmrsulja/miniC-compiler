@@ -791,6 +791,28 @@ indexing
 
 num_exp
   : exp
+    {
+      if (offset_capture >= 0){
+        int temp = take_reg();
+
+        code("\n\t\tMULS\t");
+        gen_sym_name(offset_capture);
+        code(", $4, ");
+        gen_sym_name(temp);
+
+        code("\n\t\tSUBS\t$-%d, ", get_atr1($1) * 4);
+        gen_sym_name(temp);
+        code(", ");
+        gen_sym_name(temp);
+
+        code("\n\t\tMOV \t");
+        code("%s(%%14), ", get_name(temp)); 
+        gen_sym_name(temp);
+        set_type(temp, get_type($1));
+        $$ = temp;
+        offset_capture = -1;
+      }
+    }
   | num_exp _AROP exp
       {
         if(get_type($1) != get_type($3))
