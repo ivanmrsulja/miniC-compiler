@@ -75,6 +75,8 @@
   int offset_capture = -1;
   int indexed_var = -1;
 
+  int regs_to_increment[CHAR_BUFFER_LENGTH];
+
   FILE *output;
 %}
 
@@ -278,7 +280,7 @@ variable
         code("\n\t\tMOV \t$0, ");
         gen_arr_sym_name(get_last_element(), i);
       }
-      //strcpy(res, get_name(get_last_element()));
+      
       for (i = 1; i < arr_size; i+=1){
         char* source = malloc(sizeof(char));
         source[0] = '*';
@@ -682,6 +684,7 @@ assignment_statement
         int j;
         for(j = 0; j < 128; j+=1){
           left_to_increment[j] = -1;
+          regs_to_increment[j] = -1;
         }
       } 
     _ASSIGN num_exp _SEMICOLON
@@ -744,6 +747,7 @@ assignment_statement
         int j;
         for(j = 0; j < 128; j+=1){
           left_to_increment[j] = -1;
+          regs_to_increment[j] = -1;
         }
       } 
     _ASSIGN num_exp _SEMICOLON
@@ -760,7 +764,11 @@ assignment_statement
         }
         in_assignment = 0;
         init_valid = 1;
-
+        
+        int temp = take_reg();
+        gen_mov($1, temp);
+        gen_arr_mov($4, idx, temp);
+        
         int i, j;
         for(i = 0; i < 128; i+=1){
           for(j = 0; j < left_to_increment[i] + 1; j+=1){
@@ -774,14 +782,18 @@ assignment_statement
             gen_sym_name(i);
           }
           left_to_increment[i] = -1;
+          if(regs_to_increment[i] > -1){
+              if(get_type(i) == UINT){
+                code("\n\t\tADDU\t");
+              }else {
+                code("\n\t\tADDS\t");
+              }
+              code("%s(%%14), $%d, %s(%%14)", get_name(i), regs_to_increment[i] + 1, get_name(i));
+              free_if_reg(i);
+              regs_to_increment[i] = -1;
+          }
         }
         in_expression = 0;
-        
-        int temp = take_reg();
-        gen_mov($1, temp);
-        gen_arr_mov($4, idx, temp);
-        
-        
       }
   ;
 
@@ -853,6 +865,8 @@ num_exp
           $$ = take_reg();
           gen_sym_name($$);
           set_type($$, t1);
+
+
         }
       }
   ;
@@ -976,14 +990,21 @@ unaryop
         code(", ");
         gen_sym_name(tmp_reg);
 
-        if(get_type($$) == UINT){
-          code("\n\t\tADDU\t");
-        }else {
-          code("\n\t\tADDS\t");
+        if(in_expression == 1){
+          regs_to_increment[tmp_reg] += 1;
+          offset_capture = $1;
         }
-        code("%s(%%14), $1, %s(%%14)", get_name(tmp_reg), get_name(tmp_reg));
+        else{
+          if(get_type($$) == UINT){
+            code("\n\t\tADDU\t");
+          }else {
+            code("\n\t\tADDS\t");
+          }
+          code("%s(%%14), $1, %s(%%14)", get_name(tmp_reg), get_name(tmp_reg));
+          free_if_reg(tmp_reg);
+        }
+        
       }
-      free_if_reg(tmp_reg);
     }
   ;
 

@@ -1,5 +1,5 @@
 //OPIS: nizovi
-//RETURN: 31
+//RETURN: 35
 
 int main(){
 	int ind, i = 0;
@@ -16,6 +16,8 @@ int main(){
 		a[i] = a[i] + i;
 		i++;
 	}
+	
+	a[1] = a[1]++ + 3;
 	
 	return a[1];
 }
