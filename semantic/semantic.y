@@ -133,10 +133,12 @@ parameter_list
   : /* empty */
     { set_atr1(fun_idx, 0); }
   | parameters
+  ;
 
 parameters
   : parameter
   | parameters _COMMA parameter
+  ;
 
 parameter
   : _TYPE _ID
@@ -313,6 +315,7 @@ statement
 
 while_statement
   : _WHILE _LPAREN rel_exp _RPAREN statement
+  ;
 
 switch_statement
   : _SWITCH _LPAREN _ID
@@ -522,10 +525,12 @@ function_call
 argument_list
   : /* empty */
   | arguments
+  ;
 
 arguments
   : argument
   | arguments _COMMA argument
+  ;
 
 argument
   : num_exp

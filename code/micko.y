@@ -198,11 +198,13 @@ parameter_list
   : /* empty */
     { set_atr1(fun_idx, 0); }
   | parameters
+  ;
 
 parameters
   : parameter
   | parameters _COMMA parameter
-
+  ;
+  
 parameter
   : _TYPE _ID
       {
@@ -418,6 +420,7 @@ while_statement
       code("\n\t\tJMP\t@while_%d_depth_%d", $<i>2, while_depth);
       code("\n@end_while_%d_depth_%d:", $<i>2, while_depth--);
     }
+  ;
 
 switch_statement
   : _SWITCH _LPAREN _ID
@@ -731,10 +734,12 @@ num_exp
         code("\n@cond_end_%d:", conditional_operator_counter);
         set_type($$, get_type($7));
       }
+    ;
 
 exp
   : half_exp { $$ = $1; }
   | full_exp { $$ = $1; }
+  ;
 
 half_exp
   : literal
@@ -749,7 +754,8 @@ half_exp
           }
         }
       }
-
+  ;
+  
 full_exp
   : function_call
       {
@@ -833,10 +839,12 @@ function_call
 argument_list
   : /* empty */
   | arguments
+  ;
 
 arguments
   : argument
   | arguments _COMMA argument
+  ;
 
 argument
   : num_exp

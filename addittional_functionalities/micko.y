@@ -205,10 +205,12 @@ parameter_list
   : /* empty */
     { set_atr1(fun_idx, 0); }
   | parameters
+  ;
 
 parameters
   : parameter
   | parameters _COMMA parameter
+  ;
 
 parameter
   : _TYPE _ID
@@ -257,6 +259,7 @@ var_start
       type_capture = $1;
     } 
    variable
+  ;
 
 variable
   : vars declaration _SEMICOLON{ row_counter = 0; }
@@ -454,6 +457,7 @@ while_statement
       code("\n\t\tJMP\twhile_%d_depth_%d", $<i>2, while_depth);
       code("\nend_while_%d_depth_%d:", $<i>2, while_depth--);
     }
+  ;
 
 switch_statement
   : _SWITCH _LPAREN _ID
@@ -895,10 +899,12 @@ num_exp
         code("\ncond_end_%d:", conditional_operator_counter);
         set_type($$, get_type($7));
       }
+    ;
 
 exp
   : half_exp { $$ = $1; }
   | full_exp { $$ = $1; }
+  ;
 
 half_exp
   : literal
@@ -1051,11 +1057,13 @@ function_call
 argument_list
   : /* empty */
   | arguments
+  ;
 
 arguments
   : argument
   | arguments _COMMA argument
-
+  ;
+  
 argument
   : num_exp
     { 
