@@ -787,14 +787,14 @@ assignment_statement
           }
           left_to_increment[i] = -1;
           if(regs_to_increment[i] > -1){
-              if(get_type(i) == UINT){
-                code("\n\t\tADDU\t");
-              }else {
-                code("\n\t\tADDS\t");
-              }
-              code("%s(%%14), $%d, %s(%%14)", get_name(i), regs_to_increment[i] + 1, get_name(i));
-              free_if_reg(i);
-              regs_to_increment[i] = -1;
+            if(get_type(i) == UINT){
+              code("\n\t\tADDU\t");
+            }else {
+              code("\n\t\tADDS\t");
+            }
+            code("%s(%%14), $%d, %s(%%14)", get_name(i), regs_to_increment[i] + 1, get_name(i));
+            free_if_reg(i);
+            regs_to_increment[i] = -1;
           }
         }
         in_expression = 0;
@@ -869,8 +869,6 @@ num_exp
           $$ = take_reg();
           gen_sym_name($$);
           set_type($$, t1);
-
-
         }
       }
   ;
