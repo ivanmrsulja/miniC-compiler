@@ -963,16 +963,11 @@ unaryop
             }else {
               code("\n\t\tADDS\t");
             }
-            if(offset_capture < 0){
-              gen_sym_name($$);
-              code(", $1, ");
-              gen_sym_name($$);
-            }else{
-              gen_arr_sym_name($$, offset_capture);
-              code(", $1, ");
-              gen_arr_sym_name($$, offset_capture);
-              offset_capture = -1;
-            }
+
+            gen_sym_name($$);
+            code(", $1, ");
+            gen_sym_name($$);
+
       }
     }
   | indexing _UNOP

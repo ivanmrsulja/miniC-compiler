@@ -255,9 +255,7 @@ void add_operand_two_registers(uchar kind, uchar reg, uchar data) {
     } else {
         operand[operand_cnt].kind = kind;
         operand[operand_cnt].reg = reg;
-        //operand[operand_cnt].data = *getmem(processor.reg[operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista]);
         operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista = data;
-        // printf("AAA %uc\ns", operand[operand_cnt].moj_dodatni_registar_koji_nece_pokvariti_nista);
         operand_cnt++;
     }
 }
@@ -380,7 +378,6 @@ void set_operand(Operand op, word data) {
             *getmem(processor.reg[op.reg]+op.data) = data;
             break;
         case OP_INDIRECT_INDEX:
-            // printf("OP_INDIRECT_INDEX %uc %d\n", op.moj_dodatni_registar_koji_nece_pokvariti_nista, processor.reg[op.moj_dodatni_registar_koji_nece_pokvariti_nista]);
             *(getmem(processor.reg[op.reg] + processor.reg[op.moj_dodatni_registar_koji_nece_pokvariti_nista])) = data;
             break;
         case OP_ADDRESS:    //možda ne treba...
